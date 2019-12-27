@@ -150,12 +150,17 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		badServerName(w)
 		return
 	}
-	if len(addrs) != 1 || !validChallengeAddr(addrs[0]) {
-		log.Printf("autocertDelegate: invalid server name %q; wrong number of resolved addrs", serverName)
+	if len(addrs) != 1 {
+		log.Printf("autocertDelegate: invalid server name %q; wrong number of resolved addrs. Want 1; got: %q", serverName, addrs)
 		badServerName(w)
 		return
 	}
 	challengeIP := addrs[0]
+	if !validChallengeAddr(challengeIP) {
+		log.Printf("autocertDelegate: server name %q resolved to invalid challenge IP %q", serverName, challengeIP)
+		badServerName(w)
+		return
+	}
 
 	challengePort, err := strconv.Atoi(r.FormValue("challengeport"))
 	if err != nil || challengePort < 0 || challengePort > 64<<10 {
